@@ -547,6 +547,46 @@ ${JSON.stringify(agentData.agents, null, 2)}
   return JSON.parse(res);
 }
 
+// ── Step 4: Generate Debate (議事録) ──
+async function generateDebate(agents, conflicts, decision, theme, apiKey) {
+  const agentList = agents.agents.map(a => `- ${a.name}: ${a.mission}`).join('
+');
+  const conflictList = conflicts.map(c => `- ${c.label}: ${c.why}`).join('
+');
+
+  const prompt = `あなたは組織の意思決定会議の議事録作成者です。
+以下の会議内容をもとに、各Agentがどのような主張をし、最終的にどのような決定に至ったかを議事録形式で生成してください。
+
+テーマ: ${theme}
+
+参加Agent:
+${agentList}
+
+主要Conflict:
+${conflictList}
+
+最終決定: ${decision.name}
+決定内容: ${decision.desc}
+
+以下のJSON形式のみで回答してください（前置き・説明・バッククォートなし）:
+{
+  "debate": [
+    {
+      "agent": "Agent名（上記と完全一致）",
+      "stance": "このAgentの立場・主張（日本語1文）",
+      "key_argument": "最も強調した論点（日本語1〜2文）",
+      "reaction_to_decision": "最終決定に対するこのAgentの反応（賛成/条件付き賛成/懸念あり/反対）",
+      "comment": "最終決定へのコメント（日本語1文）"
+    }
+  ],
+  "meeting_summary": "会議全体の流れと決定に至った経緯（日本語3〜4文）",
+  "dissenting_voices": "最終決定に懸念を示したAgentとその理由（日本語1〜2文。なければ空文字）"
+}`;
+
+  const res = await callClaude(apiKey, prompt);
+  return JSON.parse(res);
+}
+
 // ── Step 3: Generate Options (on demand) ──
 async function generateOptions(conflict, theme, apiKey) {
   const prompt = `あなたは組織の意思決定設計の専門家です。
@@ -794,13 +834,18 @@ function renderHDL(conflict, options) {
 }
 
 // ── Confirm ──
-function confirmDecision() {
+async function confirmDecision() {
   if (!selectedOption || !lastResult) return;
+  const btn = document.getElementById('confirm-btn');
+  btn.disabled = true;
+  btn.textContent = '議事録を生成中...';
+
   const now = new Date();
   const dateStr = now.toLocaleDateString('ja-JP', { year:'numeric', month:'2-digit', day:'2-digit' });
   const timeStr = now.toLocaleTimeString('ja-JP', { hour:'2-digit', minute:'2-digit' });
   const top = selectedOption.conflict;
 
+  // Show basic record first
   document.getElementById('final-card').innerHTML = `
     <div class="fc-meta">${dateStr} ${timeStr} &nbsp;·&nbsp; ${lastResult.theme}</div>
     <h3>${selectedOption.name}</h3>
@@ -809,6 +854,7 @@ function confirmDecision() {
       <p style="margin-bottom:4px"><span style="font-family:var(--mono);font-size:0.62rem;color:var(--text-muted);letter-spacing:0.1em">BEST FOR</span><br>${selectedOption.best_for}</p>
       <p style="margin-top:10px"><span style="font-family:var(--mono);font-size:0.62rem;color:var(--text-muted);letter-spacing:0.1em">RISK</span><br>${selectedOption.risk}</p>
       <p style="margin-top:14px;font-family:var(--mono);font-size:0.62rem;color:var(--text-muted)">Main Conflict: ${top.label||top.agent_a+' vs '+top.agent_b} (Score: ${top.tension_score})</p>
+      <div id="debate-loading" style="margin-top:16px;font-family:var(--mono);font-size:0.65rem;color:var(--text-muted)">議事録を生成中...</div>
     </div>`;
 
   document.getElementById('final-output').classList.add('visible');
@@ -816,6 +862,54 @@ function confirmDecision() {
   setTimeout(() => {
     document.getElementById('final-output').scrollIntoView({ behavior:'smooth', block:'nearest' });
   }, 100);
+
+  try {
+    const apiKey = document.getElementById('api-key-input').value.trim();
+    const debateData = await generateDebate(
+      lastResult.agents,
+      lastResult.conflictData.conflicts,
+      selectedOption,
+      lastResult.theme,
+      apiKey
+    );
+    lastResult.debateData = debateData;
+    renderDebate(debateData);
+  } catch(e) {
+    console.error(e);
+    const dl = document.getElementById('debate-loading');
+    if (dl) dl.textContent = '議事録生成に失敗しました';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '決定を確定する →';
+  }
+}
+
+function renderDebate(data) {
+  const loading = document.getElementById('debate-loading');
+  if (loading) loading.remove();
+
+  const reactionColor = { '賛成':'#1fd98a', '条件付き賛成':'#f5a623', '懸念あり':'#ff9f43', '反対':'#ff4f7e' };
+
+  const html = `
+    <div style="margin-top:20px;border-top:1px solid var(--border2);padding-top:16px">
+      <div style="font-family:var(--mono);font-size:0.6rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-muted);margin-bottom:12px">Meeting Minutes</div>
+      <div style="font-size:0.8rem;color:var(--text-dim);line-height:1.8;margin-bottom:14px">${data.meeting_summary}</div>
+      ${data.dissenting_voices ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:14px;padding:8px 12px;border-left:2px solid var(--medium);background:color-mix(in srgb,var(--medium) 8%,transparent)">⚠ ${data.dissenting_voices}</div>` : ''}
+      <div style="display:flex;flex-direction:column;gap:8px">
+        ${(data.debate||[]).map(d => `
+          <div style="padding:10px 14px;background:var(--surface2);border-radius:3px;border-left:2px solid ${reactionColor[d.reaction_to_decision]||'var(--border)'}">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+              <div style="font-family:var(--mono);font-size:0.65rem;color:var(--text)">${d.agent}</div>
+              <div style="font-family:var(--mono);font-size:0.58rem;color:${reactionColor[d.reaction_to_decision]||'var(--text-muted)'}">${d.reaction_to_decision}</div>
+            </div>
+            <div style="font-size:0.75rem;color:var(--text-dim);margin-bottom:4px">${d.key_argument}</div>
+            <div style="font-size:0.72rem;color:var(--text-muted);font-style:italic">${d.comment}</div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+
+  const fcBody = document.querySelector('.fc-body');
+  if (fcBody) fcBody.insertAdjacentHTML('beforeend', html);
 }
 
 // ── PDF Export ──
@@ -976,6 +1070,24 @@ function buildPDFDiv() {
       </div>
     </div>` : ''}
 
+    ${lastResult.debateData ? `
+    <div style="margin-bottom:24px">
+      <div style="font-size:10px;color:#999;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:10px;border-bottom:1px solid #eee;padding-bottom:6px">05 — Meeting Minutes</div>
+      <div style="font-size:12px;color:#444;line-height:1.8;margin-bottom:12px">${lastResult.debateData.meeting_summary}</div>
+      ${lastResult.debateData.dissenting_voices ? `<div style="font-size:11px;color:#888;padding:8px 12px;border-left:3px solid #f5a623;background:#fffbf0;margin-bottom:12px">⚠ ${lastResult.debateData.dissenting_voices}</div>` : ''}
+      ${(lastResult.debateData.debate||[]).map(d => {
+        const rc = {'賛成':'#1fd98a','条件付き賛成':'#f5a623','懸念あり':'#ff9f43','反対':'#ff4f7e'};
+        return `<div style="margin-bottom:8px;padding:10px 12px;border:1px solid #eee;border-radius:3px;border-left:3px solid ${rc[d.reaction_to_decision]||'#ccc'}">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+            <div style="font-weight:600;font-size:11px">${d.agent}</div>
+            <div style="font-size:10px;color:${rc[d.reaction_to_decision]||'#999'}">${d.reaction_to_decision}</div>
+          </div>
+          <div style="font-size:11px;color:#555;margin-bottom:3px">${d.key_argument}</div>
+          <div style="font-size:10px;color:#888;font-style:italic">${d.comment}</div>
+        </div>`;
+      }).join('')}
+    </div>` : ''}
+
     <div style="margin-top:32px;padding-top:14px;border-top:1px solid #ddd;font-size:10px;color:#aaa;display:flex;justify-content:space-between">
       <span>Decision Lab v0.4 — Meeting Design Report</span>
       <span>${dateStr}</span>
@@ -999,6 +1111,7 @@ function exportJSON() {
     },
     conflict_map: lastResult.conflictData.conflicts,
     alignment_map: lastResult.conflictData.alignments,
+    meeting_minutes: lastResult.debateData || null,
     human_decision: selectedOption ? {
       option: selectedOption.name,
       description: selectedOption.desc,
