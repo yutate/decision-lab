@@ -228,6 +228,8 @@ hr.div{border:none;border-top:1px solid var(--border2);margin:32px 0}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
 </style>
+<!-- jsPDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 <div class="shell">
@@ -347,7 +349,8 @@ hr.div{border:none;border-top:1px solid var(--border2);margin:32px 0}
     <hr class="div">
     <div class="slabel">Decision Record</div>
     <div class="final-card" id="final-card"></div>
-    <div class="export-wrap">
+    <div class="export-wrap" style="gap:8px">
+      <button class="export-btn" onclick="exportPDF()" id="pdf-btn">PDF Export</button>
       <button class="export-btn" onclick="exportJSON()">JSON Export</button>
     </div>
   </div>
@@ -812,6 +815,152 @@ function confirmDecision() {
   setTimeout(() => {
     document.getElementById('final-output').scrollIntoView({ behavior:'smooth', block:'nearest' });
   }, 100);
+}
+
+// ── PDF Export ──
+async function exportPDF() {
+  if (!lastResult) return;
+  const btn = document.getElementById('pdf-btn');
+  btn.disabled = true;
+  btn.textContent = '生成中...';
+
+  try {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+    // IPA Gothic font (subset via Google Fonts API workaround — use built-in with unicode escape)
+    // jsPDF doesn't support CJK natively, so we render via canvas approach
+    // Instead: use html2canvas approach on a temp div
+    await renderPDFContent(doc);
+    doc.save('decision-lab-report.pdf');
+  } catch(e) {
+    console.error(e);
+    alert('PDF生成エラー: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'PDF Export';
+  }
+}
+
+async function renderPDFContent(doc) {
+  if (!lastResult) return;
+  const { theme, agents, conflictData } = lastResult;
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('ja-JP', { year:'numeric', month:'2-digit', day:'2-digit' });
+
+  // Create off-screen render div
+  const div = document.createElement('div');
+  div.style.cssText = `
+    position:fixed; left:-9999px; top:0;
+    width:794px; background:#fff; color:#111;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size:13px; line-height:1.7; padding:48px;
+    box-sizing:border-box;
+  `;
+
+  const agentNames = agents.agents.map(a => a.name).join(' / ');
+  const topConflict = conflictData.conflicts[0] || {};
+  const conflicts = conflictData.conflicts || [];
+  const alignments = conflictData.alignments || [];
+
+  div.innerHTML = `
+    <div style="border-bottom:3px solid #111;padding-bottom:16px;margin-bottom:28px">
+      <div style="font-size:28px;font-weight:700;letter-spacing:-0.02em;margin-bottom:4px">Decision Lab</div>
+      <div style="font-size:11px;color:#666;letter-spacing:0.15em;text-transform:uppercase">Meeting Design Report &nbsp;·&nbsp; ${dateStr}</div>
+    </div>
+
+    <div style="margin-bottom:24px">
+      <div style="font-size:10px;color:#999;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:6px">Theme</div>
+      <div style="font-size:15px;font-weight:600;line-height:1.5;white-space:pre-wrap">${theme}</div>
+      ${lastResult.context ? `<div style="font-size:11px;color:#666;margin-top:6px">${[lastResult.context.phase, lastResult.context.horizon].filter(Boolean).join(' / ')}</div>` : ''}
+    </div>
+
+    <div style="background:#f5f5f5;border-radius:4px;padding:14px 18px;margin-bottom:24px;font-size:12px;color:#444;line-height:1.7">
+      ${agents.theme_summary || ''}
+    </div>
+
+    <div style="margin-bottom:24px">
+      <div style="font-size:10px;color:#999;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:10px;border-bottom:1px solid #eee;padding-bottom:6px">02 — Meeting Design</div>
+      ${agents.agents.map((a, i) => `
+        <div style="margin-bottom:10px;padding:10px 14px;border:1px solid #e0e0e0;border-radius:3px;border-left:3px solid ${['#1fd98a','#f5a623','#8b7ff7','#ff4f7e','#00c8ff','#8ee04a'][i%6]}">
+          <div style="font-weight:600;font-size:12px;margin-bottom:3px">${a.name}</div>
+          <div style="font-size:11px;color:#555;margin-bottom:4px">${a.mission}</div>
+          <div style="font-size:10px;color:#888">${(a.priority||[]).join(' · ')}</div>
+        </div>`).join('')}
+      ${agents.missing_voices && agents.missing_voices.length > 0 ? `
+        <div style="margin-top:10px;padding:10px 14px;border:1px dashed #ccc;border-radius:3px;background:#fafafa">
+          <div style="font-size:10px;color:#999;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:6px">⚠ Missing Voice</div>
+          ${agents.missing_voices.map(v=>`<div style="font-size:11px;color:#666;margin-bottom:3px"><strong>${v.name}</strong> — ${v.reason}</div>`).join('')}
+        </div>` : ''}
+    </div>
+
+    <div style="margin-bottom:24px">
+      <div style="font-size:10px;color:#999;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:10px;border-bottom:1px solid #eee;padding-bottom:6px">03 — Conflict Map</div>
+      ${conflicts.map(c => `
+        <div style="margin-bottom:10px;padding:12px 14px;border:1px solid #e0e0e0;border-radius:3px;border-left:3px solid ${c.level==='High'?'#ff4f7e':c.level==='Medium'?'#f5a623':'#1fd98a'}">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <div style="font-weight:600;font-size:12px">${c.label||`${c.agent_a} vs ${c.agent_b}`}</div>
+            <div style="font-size:10px;padding:2px 8px;border-radius:2px;background:${c.level==='High'?'#ffe0e8':c.level==='Medium'?'#fff3e0':'#e8f8f0'};color:${c.level==='High'?'#d63060':c.level==='Medium'?'#e06800':'#1a9060'}">${c.level} · ${c.tension_score}</div>
+          </div>
+          <div style="font-size:11px;color:#555;margin-bottom:5px">${c.why}</div>
+          <div style="font-size:11px;color:#777;font-style:italic;margin-bottom:5px">${c.debate}</div>
+          <div style="font-size:11px;color:#333;font-weight:500">→ ${c.human_question}</div>
+        </div>`).join('')}
+    </div>
+
+    ${alignments.length > 0 ? `
+    <div style="margin-bottom:24px">
+      <div style="font-size:10px;color:#999;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:10px;border-bottom:1px solid #eee;padding-bottom:6px">Alignment Map</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        ${alignments.map(a=>`
+          <div style="padding:8px 12px;border:1px solid #ddd;border-radius:3px;border-left:3px solid #8b7ff7;font-size:11px">
+            <div style="font-weight:600;margin-bottom:2px">${a.label||`${a.agent_a} + ${a.agent_b}`}</div>
+            <div style="color:#8b7ff7;font-size:10px">${a.strength}</div>
+          </div>`).join('')}
+      </div>
+    </div>` : ''}
+
+    ${selectedOption ? `
+    <div style="margin-bottom:24px">
+      <div style="font-size:10px;color:#999;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:10px;border-bottom:1px solid #eee;padding-bottom:6px">04 — Human Decision</div>
+      <div style="padding:16px 18px;border:2px solid #111;border-radius:3px">
+        <div style="font-size:16px;font-weight:700;margin-bottom:8px">${selectedOption.name}</div>
+        <div style="font-size:12px;color:#333;margin-bottom:10px;line-height:1.7">${selectedOption.desc}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div>
+            <div style="font-size:10px;color:#999;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:4px">Best For</div>
+            <div style="font-size:11px;color:#444">${selectedOption.best_for}</div>
+          </div>
+          <div>
+            <div style="font-size:10px;color:#999;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:4px">Risk</div>
+            <div style="font-size:11px;color:#444">${selectedOption.risk}</div>
+          </div>
+        </div>
+        <div style="margin-top:10px;font-size:10px;color:#999">Main Conflict: ${topConflict.label||''} (Score: ${topConflict.tension_score||'—'})</div>
+      </div>
+    </div>` : ''}
+
+    <div style="margin-top:32px;padding-top:14px;border-top:1px solid #ddd;font-size:10px;color:#aaa;display:flex;justify-content:space-between">
+      <span>Decision Lab v0.4 — Meeting Design Report</span>
+      <span>${dateStr}</span>
+    </div>
+  `;
+
+  document.body.appendChild(div);
+
+  // Use html2canvas via jsPDF's html method
+  await doc.html(div, {
+    callback: function(d) { document.body.removeChild(div); },
+    x: 0, y: 0,
+    width: 210,
+    windowWidth: 794,
+    html2canvas: {
+      scale: 0.265, // 794px → 210mm
+      useCORS: true,
+      logging: false,
+    },
+    autoPaging: 'text',
+  });
 }
 
 // ── Export ──
