@@ -238,7 +238,7 @@ hr.div{border:none;border-top:1px solid var(--border2);margin:32px 0}
 <header>
   <div class="h-left">
     <h1>Decision Lab</h1>
-    <div class="sub">Meeting Design Engine — v0.4</div>
+    <div class="sub">Meeting Design Engine — v0.5</div>
   </div>
   <div class="h-badge">争点シミュレーター</div>
 </header>
@@ -863,6 +863,12 @@ async function confirmDecision() {
     document.getElementById('final-output').scrollIntoView({ behavior:'smooth', block:'nearest' });
   }, 100);
 
+  // Disable export buttons during debate generation
+  const pdfBtn = document.getElementById('pdf-btn');
+  const jsonBtn = document.getElementById('json-btn');
+  if (pdfBtn) pdfBtn.disabled = true;
+  if (jsonBtn) jsonBtn.disabled = true;
+
   try {
     const apiKey = document.getElementById('api-key-input').value.trim();
     const debateData = await generateDebate(
@@ -877,10 +883,12 @@ async function confirmDecision() {
   } catch(e) {
     console.error(e);
     const dl = document.getElementById('debate-loading');
-    if (dl) dl.textContent = '議事録生成に失敗しました';
+    if (dl) dl.textContent = '議事録生成に失敗しました（Export は利用可能です）';
   } finally {
     btn.disabled = false;
     btn.textContent = '決定を確定する →';
+    if (pdfBtn) pdfBtn.disabled = false;
+    if (jsonBtn) jsonBtn.disabled = false;
   }
 }
 
@@ -964,7 +972,7 @@ async function exportPDF() {
       y += pageH;
     }
 
-    doc.save('decision-lab-report.pdf');
+    doc.save('decision-lab-v05-report.pdf');
   } catch(e) {
     console.error(e);
     alert('PDF生成エラー: ' + e.message);
@@ -1089,7 +1097,7 @@ function buildPDFDiv() {
     </div>` : ''}
 
     <div style="margin-top:32px;padding-top:14px;border-top:1px solid #ddd;font-size:10px;color:#aaa;display:flex;justify-content:space-between">
-      <span>Decision Lab v0.4 — Meeting Design Report</span>
+      <span>Decision Lab v0.5 — Meeting Design Report</span>
       <span>${dateStr}</span>
     </div>
   `;
@@ -1122,7 +1130,7 @@ function exportJSON() {
   const blob = new Blob([JSON.stringify(out, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url; a.download = 'decision-lab-v04.json'; a.click();
+  a.href = url; a.download = 'decision-lab-v05.json'; a.click();
   URL.revokeObjectURL(url);
 }
 
