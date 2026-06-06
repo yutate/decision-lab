@@ -549,10 +549,8 @@ ${JSON.stringify(agentData.agents, null, 2)}
 
 // ── Step 4: Generate Debate (議事録) ──
 async function generateDebate(agents, conflicts, decision, theme, apiKey) {
-  const agentList = agents.agents.map(a => `- ${a.name}: ${a.mission}`).join('
-');
-  const conflictList = conflicts.map(c => `- ${c.label}: ${c.why}`).join('
-');
+  const agentList = agents.agents.map(a => `- ${a.name}: ${a.mission}`).join('\\n');
+  const conflictList = conflicts.map(c => `- ${c.label}: ${c.why}`).join('\\n');
 
   const prompt = `あなたは組織の意思決定会議の議事録作成者です。
 以下の会議内容をもとに、各Agentがどのような主張をし、最終的にどのような決定に至ったかを議事録形式で生成してください。
