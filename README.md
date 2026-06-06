@@ -39,17 +39,23 @@ Input（テーマ + コンテキスト）
 ③ Options Generation  — 主要Conflictへの選択肢を生成（on demand）
   ↓
 Human Decision Layer  — 人間が選択・確定
+  ↓
+④ Meeting Minutes     — 各Agentの主張と決定経緯を議事録として生成
 ```
 
-### 3ステップAPI設計
+### 4ステップAPI設計
 
-| Step | 内容 | モデル | 出力量 |
-|------|------|--------|--------|
-| generateAgents | テーマ → 4〜6 Agent設計 | Haiku | 軽量 |
-| generateConflicts | Agent間のConflict分析（最大3件） | Haiku | 中量 |
-| generateOptions | 選択したConflictの選択肢3案 | Haiku | 軽量 |
+| Step | 関数 | 内容 | 出力量 |
+|------|------|------|--------|
+| 1 | `generateAgents` | テーマ → 4〜6 Agent設計 + Missing Voice | 軽量 |
+| 2 | `generateConflicts` | Agent間のConflict分析（最大3件）+ Alignment | 中量 |
+| 3 | `generateOptions` | 選択したConflictの選択肢3案（on demand） | 軽量 |
+| 4 | `generateDebate` | 各Agentの主張・反応・議事録（決定確定後） | 軽量 |
 
-2回呼び出しにするとトークン超過が発生したため3分割に設計変更（v0.4）。
+モデル：`claude-haiku-4-5-20251001` / 1回の実行コスト：約$0.015（〜2円）
+
+2回呼び出しでトークン超過が発生したため3分割に設計変更（v0.4）。
+Options と Minutes をon demandにすることで各呼び出しを軽量に保っている。
 
 ---
 
@@ -106,11 +112,37 @@ Alignment Map も同時生成（方向性が一致するAgentペア）。
 
 ---
 
+## Meeting Minutes（議事録）
+
+「決定を確定する」を押すと各Agentの主張ログを生成。
+
+```json
+{
+  "debate": [
+    {
+      "agent": "Agent名",
+      "stance": "このAgentの立場・主張",
+      "key_argument": "最も強調した論点",
+      "reaction_to_decision": "賛成 / 条件付き賛成 / 懸念あり / 反対",
+      "comment": "最終決定へのひとこと"
+    }
+  ],
+  "meeting_summary": "会議全体の流れと決定に至った経緯",
+  "dissenting_voices": "懸念を示したAgentとその理由"
+}
+```
+
+PDF・JSONの `05 — Meeting Minutes` セクションに出力される。
+
+---
+
 ## 出力
 
-- **画面表示**：Meeting Design → Conflict Map → Alignment Map → Trade-off Explanation → Human Decision → Decision Record
-- **JSON Export**：全セクションを構造化データで出力
-- **PDF Export**：A4レポート（jsPDF + html2canvas）
+| 形式 | 内容 |
+|------|------|
+| 画面 | Meeting Design → Conflict Map → Alignment Map → Trade-off → Human Decision → Decision Record + Minutes |
+| JSON | 全セクション構造化データ（`meeting_minutes` フィールド含む） |
+| PDF | A4レポート（jsPDF + html2canvas）。05 — Meeting Minutes まで含む |
 
 ---
 
@@ -121,7 +153,7 @@ Alignment Map も同時生成（方向性が一致するAgentペア）。
 | 実装 | 単一HTML（Vanilla JS） |
 | AIモデル | claude-haiku-4-5-20251001 |
 | API | Anthropic Messages API（ブラウザ直接呼び出し） |
-| PDF | jsPDF 2.5.1 |
+| PDF | jsPDF 2.5.1 + html2canvas 1.4.1 |
 | デプロイ | GitHub Pages |
 | API Key保存 | localStorage |
 
@@ -134,7 +166,8 @@ Alignment Map も同時生成（方向性が一致するAgentペア）。
 | v0.1 | 固定6 Agent（Growth / Profit / Brand / Youth / LTV / Trust）、ルールベーススコアリング |
 | v0.2 | 設計整理（入力設計・スコアリングマトリクス・均衡判定・名前付き戦略案） |
 | v0.3 | コンセプト転換：「優先順位診断」→「争点可視化」。Conflict Detection導入、Conflict起点のHDL |
-| v0.4 | Agent Generation Layer追加。固定Agent廃止→AIによる動的生成。3ステップAPI分割。PDF Export追加 |
+| v0.4 | Agent Generation Layer追加。固定Agent廃止→AIによる動的生成。3ステップAPI分割。PDF/JSON Export追加 |
+| v0.4+ | Meeting Minutes追加（4ステップ化）。各AgentのReaction・議事録をPDF/JSONに出力 |
 
 ---
 
@@ -143,6 +176,7 @@ Alignment Map も同時生成（方向性が一致するAgentペア）。
 - **決めるAIではなく、決めさせるAI**：AIは選択肢と争点を提示し、決定は人間が行う
 - **最適化ではなく合意形成**：単一の正解ではなく、組織内の価値観の衝突を可視化する
 - **会議の前に会議を設計する**：誰を呼ぶかを決めることが、意思決定の質を左右する
+- **議事録まで設計する**：決定の経緯を残すことが、次の意思決定の質を高める
 
 ---
 
