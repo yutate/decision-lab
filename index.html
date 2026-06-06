@@ -48,11 +48,11 @@ header{padding:44px 0 36px;border-bottom:1px solid var(--border2);margin-bottom:
 .h-badge{font-family:var(--mono);font-size:0.6rem;color:var(--text-muted);border:1px solid var(--border);padding:4px 10px;border-radius:2px;white-space:nowrap}
 
 /* Section label */
-.slabel{font-family:var(--mono);font-size:0.6rem;letter-spacing:0.22em;text-transform:uppercase;color:var(--text-muted);margin-bottom:14px}
+.slabel{font-family:var(--mono);font-size:0.68rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-dim);margin-bottom:14px}
 
 /* ── Phase indicator ── */
 .phase-bar{display:flex;gap:0;margin-bottom:40px;border:1px solid var(--border2);border-radius:4px;overflow:hidden}
-.phase-step{flex:1;padding:10px 8px;text-align:center;font-family:var(--mono);font-size:0.58rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);border-right:1px solid var(--border2);transition:all 0.2s;cursor:default}
+.phase-step{flex:1;padding:10px 8px;text-align:center;font-family:var(--mono);font-size:0.65rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-dim);border-right:1px solid var(--border2);transition:all 0.2s;cursor:default}
 .phase-step:last-child{border-right:none}
 .phase-step.active{color:var(--text);background:var(--surface)}
 .phase-step.done{color:var(--low)}
@@ -60,7 +60,7 @@ header{padding:44px 0 36px;border-bottom:1px solid var(--border2);margin-bottom:
 /* ── Input area ── */
 .input-panel{background:var(--surface);border:1px solid var(--border2);border-radius:4px;padding:28px;margin-bottom:28px}
 .input-panel h2{font-family:var(--serif);font-size:1.1rem;font-weight:400;margin-bottom:6px}
-.input-hint{font-family:var(--mono);font-size:0.62rem;color:var(--text-muted);margin-bottom:18px;line-height:1.7}
+.input-hint{font-family:var(--sans);font-size:0.8rem;color:var(--text-dim);margin-bottom:18px;line-height:1.7}
 
 .theme-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:2px;color:var(--text);font-family:var(--sans);font-size:1rem;font-weight:300;line-height:1.5;padding:14px 16px;outline:none;transition:border-color 0.15s;resize:none;min-height:80px}
 .theme-input:focus{border-color:var(--text-dim)}
@@ -69,15 +69,15 @@ header{padding:44px 0 36px;border-bottom:1px solid var(--border2);margin-bottom:
 .context-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
 @media(max-width:600px){.context-grid{grid-template-columns:1fr}}
 
-.ctx-field label{display:block;font-family:var(--mono);font-size:0.62rem;color:var(--text-dim);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px}
+.ctx-field label{display:block;font-family:var(--mono);font-size:0.7rem;color:var(--text);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px}
 .seg-group{display:flex;gap:5px;flex-wrap:wrap}
-.seg-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text-dim);font-family:var(--mono);font-size:0.65rem;padding:5px 10px;border-radius:2px;cursor:pointer;transition:all 0.15s;letter-spacing:0.04em}
+.seg-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text-dim);font-family:var(--mono);font-size:0.75rem;padding:7px 13px;border-radius:2px;cursor:pointer;transition:all 0.15s;letter-spacing:0.04em}
 .seg-btn:hover{border-color:var(--text-dim);color:var(--text)}
 .seg-btn.active{background:var(--text);border-color:var(--text);color:var(--bg)}
 
 /* API key */
 .apikey-row{display:flex;gap:10px;align-items:center;margin-top:16px;padding-top:16px;border-top:1px solid var(--border2)}
-.apikey-row label{font-family:var(--mono);font-size:0.62rem;color:var(--text-muted);letter-spacing:0.1em;text-transform:uppercase;white-space:nowrap}
+.apikey-row label{font-family:var(--mono);font-size:0.7rem;color:var(--text-dim);letter-spacing:0.1em;text-transform:uppercase;white-space:nowrap}
 .apikey-input{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:2px;color:var(--text);font-family:var(--mono);font-size:0.72rem;padding:7px 12px;outline:none;transition:border-color 0.15s}
 .apikey-input:focus{border-color:var(--text-dim)}
 .apikey-input::placeholder{color:var(--text-muted)}
@@ -220,6 +220,10 @@ hr.div{border:none;border-top:1px solid var(--border2);margin:32px 0}
 .reset-btn{background:transparent;border:1px solid var(--border);color:var(--text-muted);font-family:var(--mono);font-size:0.66rem;letter-spacing:0.12em;text-transform:uppercase;padding:8px 22px;cursor:pointer;border-radius:2px;transition:all 0.15s}
 .reset-btn:hover{border-color:var(--text-dim);color:var(--text-dim)}
 
+.gen-options-btn{background:transparent;border:1px solid var(--text-dim);color:var(--text);font-family:var(--mono);font-size:0.7rem;letter-spacing:0.12em;text-transform:uppercase;padding:10px 20px;cursor:pointer;border-radius:2px;transition:all 0.2s;white-space:nowrap;flex-shrink:0}
+.gen-options-btn:hover{background:var(--text);color:var(--bg)}
+.gen-options-btn:disabled{opacity:0.3;cursor:not-allowed}
+
 ::-webkit-scrollbar{width:4px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
@@ -317,8 +321,24 @@ hr.div{border:none;border-top:1px solid var(--border2);margin:32px 0}
 
   <!-- 04 Human Decision -->
   <div class="slabel">04 — Human Decision Layer</div>
-  <div class="hdl-grid" id="hdl-grid"></div>
-  <div class="confirm-wrap">
+  <div id="hdl-generate-wrap" style="display:none;margin-bottom:20px">
+    <div style="background:var(--surface);border:1px solid var(--border2);border-radius:4px;padding:18px 22px;display:flex;align-items:center;justify-content:space-between;gap:16px">
+      <div>
+        <div style="font-family:var(--mono);font-size:0.6rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--text-muted);margin-bottom:5px">Main Conflict</div>
+        <div style="font-size:0.85rem;color:var(--text)" id="hdl-conflict-label">—</div>
+        <div style="font-family:var(--mono);font-size:0.7rem;color:var(--text-dim);margin-top:4px;font-style:italic" id="hdl-conflict-question">—</div>
+      </div>
+      <button class="gen-options-btn" id="gen-options-btn" onclick="generateAndRenderOptions()">
+        選択肢を生成 →
+      </button>
+    </div>
+  </div>
+  <div id="hdl-loading" style="display:none;text-align:center;padding:24px">
+    <div class="loading-spinner" style="margin:0 auto 10px"></div>
+    <div style="font-family:var(--mono);font-size:0.68rem;color:var(--text-dim)">Human Decision Layerを生成中...</div>
+  </div>
+  <div class="hdl-grid" id="hdl-grid" style="display:none"></div>
+  <div class="confirm-wrap" id="confirm-wrap" style="display:none">
     <span class="confirm-note">最終決定は人間が行う</span>
     <button class="confirm-btn" id="confirm-btn" onclick="confirmDecision()" disabled>決定を確定する →</button>
   </div>
@@ -398,17 +418,22 @@ async function runDesign() {
     renderMeetingDesign(agents);
 
     setPhase(2);
-    document.getElementById('loading-stream').textContent = 'Conflict を計算中...';
+    document.getElementById('loading-stream').textContent = 'Conflictを分析中...';
 
     const conflictData = await generateConflicts(theme, agents, apiKey);
     renderConflictMap(conflictData, agents);
 
-    setPhase(3);
-    renderHDL(conflictData);
+    // Show HDL trigger section
+    const top = conflictData.conflicts[0];
+    if (top) {
+      document.getElementById('hdl-conflict-label').textContent = top.label || `${top.agent_a} vs ${top.agent_b}`;
+      document.getElementById('hdl-conflict-question').textContent = top.human_question || '';
+      document.getElementById('hdl-generate-wrap').style.display = 'block';
+    }
 
     lastResult = { theme, agents, conflictData };
     document.getElementById('results').classList.add('visible');
-    setPhase(3);
+    setPhase(2);
     setTimeout(() => {
       document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 200);
@@ -490,12 +515,8 @@ ${JSON.stringify(agentData.agents, null, 2)}
       "why": "なぜこの2つが対立するか（日本語1〜2文）",
       "debate": "「実際の会議でどんな発言がぶつかるか」（日本語、鍵括弧で）",
       "human_question": "人間が判断すべき問い（日本語1文・疑問形）",
-      "options": ["選択肢A名（短く）", "選択肢B名（短く）", "Balanced"],
-      "option_descs": [
-        {"desc": "選択肢Aの説明", "best_for": "向いている状況", "risk": "リスク"},
-        {"desc": "選択肢Bの説明", "best_for": "向いている状況", "risk": "リスク"},
-        {"desc": "バランス案の説明", "best_for": "向いている状況", "risk": "リスク"}
-      ]
+      "axis_a": "Agent_Aが主張する価値軸（短く）",
+      "axis_b": "Agent_Bが主張する価値軸（短く）"
     }
   ],
   "alignments": [
@@ -512,13 +533,79 @@ ${JSON.stringify(agentData.agents, null, 2)}
 }
 
 注意:
-- conflictsは最大5個、実際に意味のある対立のみ
-- alignmentsは最大4個、実際に方向性が近いペアのみ
+- conflictsは最大3個、実際に意味のある対立のみ
+- alignmentsは最大3個、実際に方向性が近いペアのみ
 - tension_scoreは0〜100の整数
-- levelは "High"（70以上）/ "Medium"（40〜69）/ "Low"（39以下）`;
+- levelは "High"（70以上）/ "Medium"（40〜69）/ "Low"（39以下）
+- 各フィールドは簡潔に（日本語1文以内）`;
 
   const res = await callClaude(apiKey, prompt);
   return JSON.parse(res);
+}
+
+// ── Step 3: Generate Options (on demand) ──
+async function generateOptions(conflict, theme, apiKey) {
+  const prompt = `あなたは組織の意思決定設計の専門家です。
+以下のConflictに対して、Human Decision Layerの選択肢を3つ設計してください。
+
+テーマ: ${theme}
+Conflict: ${conflict.label || conflict.agent_a + ' vs ' + conflict.agent_b}
+対立の本質: ${conflict.why}
+人間への問い: ${conflict.human_question}
+価値軸A: ${conflict.axis_a || conflict.agent_a}
+価値軸B: ${conflict.axis_b || conflict.agent_b}
+
+以下のJSON形式のみで回答してください（前置き・説明・バッククォートなし）:
+{
+  "options": [
+    {
+      "name": "選択肢名（短く、例: Growth Priority）",
+      "desc": "この選択肢の説明（日本語1〜2文）",
+      "best_for": "向いている状況（日本語1文）",
+      "risk": "リスク（日本語1文）"
+    },
+    {
+      "name": "選択肢名B",
+      "desc": "説明",
+      "best_for": "向いている状況",
+      "risk": "リスク"
+    },
+    {
+      "name": "Balanced",
+      "desc": "バランス案の説明",
+      "best_for": "向いている状況",
+      "risk": "リスク"
+    }
+  ]
+}`;
+  const res = await callClaude(apiKey, prompt);
+  return JSON.parse(res);
+}
+
+async function generateAndRenderOptions() {
+  if (!lastResult) return;
+  const btn = document.getElementById('gen-options-btn');
+  btn.disabled = true;
+  document.getElementById('hdl-loading').style.display = 'block';
+
+  try {
+    const top = lastResult.conflictData.conflicts[0];
+    const apiKey = document.getElementById('api-key-input').value.trim();
+    const optData = await generateOptions(top, lastResult.theme, apiKey);
+
+    renderHDL(top, optData.options);
+    document.getElementById('hdl-grid').style.display = 'grid';
+    document.getElementById('confirm-wrap').style.display = 'flex';
+    setPhase(3);
+    setTimeout(() => {
+      document.getElementById('hdl-grid').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  } catch(err) {
+    alert('エラー: ' + err.message);
+    btn.disabled = false;
+  } finally {
+    document.getElementById('hdl-loading').style.display = 'none';
+  }
 }
 
 // ── Claude API call ──
@@ -677,31 +764,25 @@ function renderConflictMap(data, agentData) {
 }
 
 // ── Render HDL ──
-function renderHDL(data) {
-  const top = data.conflicts[0];
-  if (!top) return;
-
+function renderHDL(conflict, options) {
   const hdl = document.getElementById('hdl-grid');
   hdl.innerHTML = '';
   const labels = ['Option A', 'Option B', 'Balanced'];
-  const opts = top.options || ['Option A', 'Option B', 'Balanced'];
-  const descs = top.option_descs || [];
 
-  opts.slice(0,3).forEach((name, i) => {
-    const d = descs[i] || { desc: name, best_for: '—', risk: '—' };
+  options.slice(0,3).forEach((opt, i) => {
     const card = document.createElement('div');
     card.className = 'strategy-card';
     card.innerHTML = `
       <div class="sc-check">✓</div>
       <div class="sc-idx">${labels[i]}</div>
-      <div class="sc-name">${name}</div>
-      <div class="sc-desc">${d.desc}</div>
-      <div class="sc-meta-row"><div class="sc-mkey">Best</div><div class="sc-mval">${d.best_for}</div></div>
-      <div class="sc-meta-row"><div class="sc-mkey">Risk</div><div class="sc-mval">${d.risk}</div></div>`;
+      <div class="sc-name">${opt.name}</div>
+      <div class="sc-desc">${opt.desc}</div>
+      <div class="sc-meta-row"><div class="sc-mkey">Best</div><div class="sc-mval">${opt.best_for}</div></div>
+      <div class="sc-meta-row"><div class="sc-mkey">Risk</div><div class="sc-mval">${opt.risk}</div></div>`;
     card.addEventListener('click', () => {
       document.querySelectorAll('.strategy-card').forEach(c => c.classList.remove('selected'));
       card.classList.add('selected');
-      selectedOption = { name, desc: d.desc, best_for: d.best_for, risk: d.risk, conflict: top };
+      selectedOption = { name: opt.name, desc: opt.desc, best_for: opt.best_for, risk: opt.risk, conflict };
       document.getElementById('confirm-btn').disabled = false;
     });
     hdl.appendChild(card);
@@ -771,6 +852,10 @@ function resetAll() {
   document.getElementById('final-output').classList.remove('visible');
   document.getElementById('confirm-btn').disabled = true;
   document.getElementById('run-btn').disabled = false;
+  document.getElementById('hdl-generate-wrap').style.display = 'none';
+  document.getElementById('hdl-grid').style.display = 'none';
+  document.getElementById('confirm-wrap').style.display = 'none';
+  document.getElementById('gen-options-btn').disabled = false;
   setPhase(0);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
