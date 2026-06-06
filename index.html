@@ -228,8 +228,9 @@ hr.div{border:none;border-top:1px solid var(--border2);margin:32px 0}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
 </style>
-<!-- jsPDF -->
+<!-- jsPDF + html2canvas -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
 <div class="shell">
@@ -351,7 +352,7 @@ hr.div{border:none;border-top:1px solid var(--border2);margin:32px 0}
     <div class="final-card" id="final-card"></div>
     <div class="export-wrap" style="gap:8px">
       <button class="export-btn" onclick="exportPDF()" id="pdf-btn">PDF Export</button>
-      <button class="export-btn" onclick="exportJSON()">JSON Export</button>
+      <button class="export-btn" id="json-btn" onclick="exportJSON()">JSON Export</button>
     </div>
   </div>
 
@@ -820,35 +821,70 @@ function confirmDecision() {
 // ── PDF Export ──
 async function exportPDF() {
   if (!lastResult) return;
-  const btn = document.getElementById('pdf-btn');
-  btn.disabled = true;
-  btn.textContent = '生成中...';
+  const pdfBtn = document.getElementById('pdf-btn');
+  const jsonBtn = document.getElementById('json-btn');
+  pdfBtn.disabled = true;
+  pdfBtn.textContent = '生成中...';
 
   try {
+    const div = buildPDFDiv();
+    document.body.appendChild(div);
+
+    // Wait for fonts to load
+    await document.fonts.ready;
+    await new Promise(r => setTimeout(r, 300));
+
+    const canvas = await html2canvas(div, {
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      backgroundColor: '#ffffff',
+      width: 794,
+    });
+    document.body.removeChild(div);
+
     const { jsPDF } = window.jspdf;
+    const imgData = canvas.toDataURL('image/jpeg', 0.92);
+    const imgW = 210; // A4 width mm
+    const imgH = canvas.height * imgW / canvas.width;
+    const pageH = 297; // A4 height mm
+
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
-    // IPA Gothic font (subset via Google Fonts API workaround — use built-in with unicode escape)
-    // jsPDF doesn't support CJK natively, so we render via canvas approach
-    // Instead: use html2canvas approach on a temp div
-    await renderPDFContent(doc);
+    let y = 0;
+    while (y < imgH) {
+      if (y > 0) doc.addPage();
+      // Crop: draw portion of image that fits this page
+      const srcY = y * canvas.width / imgW;
+      const srcH = Math.min(pageH, imgH - y) * canvas.width / imgW;
+
+      // Create a cropped canvas for this page
+      const pageCanvas = document.createElement('canvas');
+      pageCanvas.width = canvas.width;
+      pageCanvas.height = Math.min(srcH, canvas.height - srcY);
+      const ctx = pageCanvas.getContext('2d');
+      ctx.drawImage(canvas, 0, srcY, canvas.width, pageCanvas.height, 0, 0, canvas.width, pageCanvas.height);
+      const pageImg = pageCanvas.toDataURL('image/jpeg', 0.92);
+      const pageImgH = pageCanvas.height * imgW / canvas.width;
+      doc.addImage(pageImg, 'JPEG', 0, 0, imgW, pageImgH);
+      y += pageH;
+    }
+
     doc.save('decision-lab-report.pdf');
   } catch(e) {
     console.error(e);
     alert('PDF生成エラー: ' + e.message);
   } finally {
-    btn.disabled = false;
-    btn.textContent = 'PDF Export';
+    pdfBtn.disabled = false;
+    pdfBtn.textContent = 'PDF Export';
   }
 }
 
-async function renderPDFContent(doc) {
-  if (!lastResult) return;
+function buildPDFDiv() {
   const { theme, agents, conflictData } = lastResult;
   const now = new Date();
   const dateStr = now.toLocaleDateString('ja-JP', { year:'numeric', month:'2-digit', day:'2-digit' });
 
-  // Create off-screen render div
   const div = document.createElement('div');
   div.style.cssText = `
     position:fixed; left:-9999px; top:0;
@@ -946,21 +982,7 @@ async function renderPDFContent(doc) {
     </div>
   `;
 
-  document.body.appendChild(div);
-
-  // Use html2canvas via jsPDF's html method
-  await doc.html(div, {
-    callback: function(d) { document.body.removeChild(div); },
-    x: 0, y: 0,
-    width: 210,
-    windowWidth: 794,
-    html2canvas: {
-      scale: 0.265, // 794px → 210mm
-      useCORS: true,
-      logging: false,
-    },
-    autoPaging: 'text',
-  });
+  return div;
 }
 
 // ── Export ──
