@@ -168,6 +168,7 @@ PDF・JSONの `05 — Meeting Minutes` セクションに出力される。
 | v0.3 | コンセプト転換：「優先順位診断」→「争点可視化」。Conflict Detection導入、Conflict起点のHDL |
 | v0.4 | Agent Generation Layer追加。固定Agent廃止→AIによる動的生成。3ステップAPI分割。PDF/JSON Export追加 |
 | v0.4+ | Meeting Minutes追加（4ステップ化）。各AgentのReaction・議事録をPDF/JSONに出力 |
+| v0.5 | Export中のロック機能追加（議事録生成完了前のExportを防止）。バージョン統一 |
 
 ---
 
